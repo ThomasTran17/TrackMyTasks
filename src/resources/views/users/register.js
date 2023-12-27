@@ -120,9 +120,10 @@ class User {
 }
 
 function register(user) {
+    console.log(user);
+
     $(".result").innerHTML = `
-        Your username is ${user.getUsername()} , your password is ${user.getPassword()} , your email is ${user.getEmail()} , 
-        your first name is ${user.getFirstName()} and your last name is ${user.getLastName()} , your image is ${user.getImage()}
+        Thanh cong
     `;
 }
 
@@ -140,30 +141,33 @@ $("#btnRegister").onclick = () => {
         $("#lastName").value
     );
 
-    //Do with file
-    let fileInput = $("#image");
-    let file = fileInput.files[0];
-
-    let promise = new Promise((resolve, reject) => {
-        file ? resolve() : reject();
-    });
-
-    promise
-        .then(() => {
-            return new Promise((resolve) => {
-                let reader = new FileReader();
-
-                reader.addEventListener("load", (e) => {
-                    let imageValue = URL.createObjectURL(file);
-                    user.setImage(imageValue);
-                    resolve();
-                });
-
-                reader.readAsDataURL(file);
-            });
+    let getImage = readFileAndGetImageURL();
+    getImage
+        .then((imageURL) => {
+            user.setImage(imageURL);
         })
         .catch(() => {})
-        .finally(() => {
-            register(user);
-        });
+        .finally(register.bind(null, user));
+
+    function readFileAndGetImageURL() {
+        let fileInput = $("#image");
+        let file = fileInput.files[0];
+        let result;
+
+        if (file) {
+            result = new Promise((resolve) => {
+                let reader = new FileReader();
+                reader.addEventListener("load", (e) => {
+                    resolve(URL.createObjectURL(file));
+                });
+                reader.readAsDataURL(file);
+            });
+        }
+
+        return result
+            ? result
+            : Promise.reject(
+                  "You didn't upload image, so we will set default avatar"
+              );
+    }
 };
