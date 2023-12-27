@@ -5,7 +5,7 @@ const $$ = document.querySelectorAll.bind(document);
 
 const main = $("#login");
 
-const userAPI = "http://localhost:3000/users";
+const userAPI = "http://localhost:3000/user/login";
 
 function start() {
     main.innerHTML = `
@@ -35,8 +35,12 @@ function start() {
 }
 
 function authentication(username, password, users) {
+    let ussss = users[0].username;
     for (let user of users) {
-        if (user.username == username && user.password == password) {
+        if (
+            user.username.localeCompare(username) &&
+            user.password == password
+        ) {
             return user;
         }
     }
@@ -58,6 +62,9 @@ function login(username, password) {
                     Dang nhap that bai
                 `;
             }
+        })
+        .catch((err) => {
+            console.error(err);
         });
 }
 

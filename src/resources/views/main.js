@@ -1,7 +1,7 @@
 "use strict";
 
 function redirect() {
-    location.replace(`./users/login.html`);
+    location.replace(`./users/login.hbs`);
 }
 
 redirect();
