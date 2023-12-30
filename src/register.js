@@ -5,6 +5,8 @@ let $$ = document.querySelectorAll.bind(document);
 
 const URL_IMAGE_DEFAULT = "abcd";
 
+const userAPI = "http://localhost:8000/account/register";
+
 function start() {
     let main = $("#register");
     main.innerHTML = `
@@ -30,13 +32,10 @@ function start() {
                 <input type="email" name="email" id="email" />
             </div>
             <div>
-                <label for="firstName">First Name</label>
-                <input type="text" name="firstName" id="firstName" />
+                <label for="fullname">Full Name</label>
+                <input type="text" name="fullname" id="fullname" />
             </div>
-            <div>
-                <label for="lastName">Last Name</label>
-                <input type="text" name="lastName" id="lastName" />
-            </div>
+            
             <div>
                 <label for="image">Upload image</label>
             <input type="file" name="image" id="image" />
@@ -57,17 +56,15 @@ class User {
     constructor(
         username,
         password,
+        fullname,
         email,
-        firstName,
-        lastName,
-        image = URL_IMAGE_DEFAULT
+        avatar = URL_IMAGE_DEFAULT
     ) {
         this.username = username;
         this.password = password;
+        this.fullname = fullname;
         this.email = email;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.image = image;
+        this.avatar = avatar;
     }
 
     getUsername() {
@@ -94,36 +91,40 @@ class User {
         this.email = email;
     }
 
-    getFirstName() {
-        return this.firstName;
+    getFullname() {
+        return this.fullname;
     }
 
-    setFirstName(firstName) {
-        this.firstName = firstName;
+    setFullname(fullname) {
+        this.fullname = fullname;
     }
 
-    getLastName() {
-        return this.lastName;
+    getAvatar() {
+        return this.avatar;
     }
 
-    setLastName(lastName) {
-        this.lastName = lastName;
-    }
-
-    getImage() {
-        return this.image;
-    }
-
-    setImage(image) {
-        this.image = image;
+    setAvatar(avatar) {
+        this.avatar = avatar;
     }
 }
 
 function register(user) {
-    $(".result").innerHTML = `
-        Your username is ${user.getUsername()} , your password is ${user.getPassword()} , your email is ${user.getEmail()} , 
-        your first name is ${user.getFirstName()} and your last name is ${user.getLastName()} , your image is ${user.getImage()}
-    `;
+    let options = {
+        method: "POST",
+        headers: {
+            Accept: "application/json, text/plain, */*",
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(user),
+    };
+    fetch(userAPI, options)
+        .then((data) => data.json())
+        .then((update) => {
+            console.log(update);
+        })
+        .catch((e) => {
+            console.log(e);
+        });
 }
 
 start();
@@ -135,35 +136,38 @@ $("#btnRegister").onclick = () => {
     let user = new User(
         $("#username").value,
         $("#password").value,
-        $("#email").value,
-        $("#firstName").value,
-        $("#lastName").value
+        $("#fullname").value,
+        $("#email").value
     );
 
-    //Do with file
-    let fileInput = $("#image");
-    let file = fileInput.files[0];
+    readFileAndGetImage()
+        .then((imageURL) => {
+            user.setAvatar(imageURL);
+        })
+        .catch((error) => {
+            console.log(error);
+        })
+        .finally(register.bind(this, user));
 
-    let promise = new Promise((resolve, reject) => {
-        file ? resolve() : reject();
-    });
+    function readFileAndGetImage() {
+        let imageURL;
+        let fileInput = $("#image");
+        let file = fileInput.files[0];
 
-    promise
-        .then(() => {
-            return new Promise((resolve) => {
+        if (file) {
+            imageURL = new Promise((resolve) => {
                 let reader = new FileReader();
-
                 reader.addEventListener("load", (e) => {
-                    let imageValue = URL.createObjectURL(file);
-                    user.setImage(imageValue);
-                    resolve();
+                    resolve(URL.createObjectURL(file));
                 });
-
                 reader.readAsDataURL(file);
             });
-        })
-        .catch(() => {})
-        .finally(() => {
-            register(user);
-        });
+        }
+
+        return imageURL
+            ? Promise.resolve(imageURL)
+            : Promise.reject(
+                  "You didn't upload any image, so we will set your avatar is default avatar"
+              );
+    }
 };

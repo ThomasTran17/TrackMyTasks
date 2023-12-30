@@ -5,7 +5,7 @@ const $$ = document.querySelectorAll.bind(document);
 
 const main = $("#login");
 
-const userAPI = "http://localhost:3000/users";
+const loginAPI = "http://localhost:8000/account/login";
 
 function start() {
     main.innerHTML = `
@@ -34,30 +34,23 @@ function start() {
     `;
 }
 
-function authentication(username, password, users) {
-    for (let user of users) {
-        if (user.username == username && user.password == password) {
-            return user;
-        }
-    }
-
-    return null;
-}
-
 function login(username, password) {
-    fetch(userAPI)
+    let user = {
+        username: username,
+        password: password,
+    };
+
+    fetch(loginAPI, {
+        method: "POST",
+        headers: {
+            Accept: "application/json, text/plain, */*",
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(user),
+    })
         .then((response) => response.json())
-        .then((users) => {
-            let user = authentication(username, password, users);
-            if (user) {
-                $(".result").innerHTML = `
-                    Dang nhap thanh cong
-                `;
-            } else {
-                $(".result").innerHTML = `
-                    Dang nhap that bai
-                `;
-            }
+        .then((user) => {
+            console.log(user);
         });
 }
 
